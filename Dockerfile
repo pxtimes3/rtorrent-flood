@@ -1,54 +1,42 @@
-#ARG BASEIMAGE_VERSION
-FROM tuxmealux/alpine-rtorrent
+FROM alpine
 
-MAINTAINER pxtimes3
+ARG UGID=666
 
-# set version label
-ARG BUILD_DATE=""
-ARG VERSION=""
-LABEL build_version="pxtimes3 version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+RUN addgroup -g $UGID rtorrent && \
+    adduser -S -u $UGID -G rtorrent rtorrent && \
+    apk add --no-cache rtorrent && \
+    mkdir -p /home/rtorrent/rtorrent/config.d && \
+    mkdir /home/rtorrent/rtorrent/.session && \
+    mkdir /home/rtorrent/rtorrent/download && \
+    mkdir /home/rtorrent/rtorrent/watch && \
+    chown -R rtorrent:rtorrent /home/rtorrent/rtorrent
 
-# package version
-ARG MEDIAINF_VER="20.03"
-ARG CURL_VER="7.71.0"
-ARG GEOIP_VER="1.1.1"
-ARG RTORRENT_VER="v0.9.7"
-ARG LIBTORRENT_VER="v0.13.8"
-# wtf? ARG MAXMIND_LICENSE_KEY
+RUN apk add --no-cache --virtual=build-dependencies python3 git nodejs nodejs-npm build-base && \
+    #npm i -g --unsafe-perm --silent flood
+    mkdir /floodtemp && \
+    chown -R rtorrent:rtorrent /floodtemp
 
-# set env
-ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-ENV LD_LIBRARY_PATH=/usr/local/lib
-ENV CONTEXT_PATH=/
-ENV CREATE_SUBDIR_BY_TRACKERS="no"
-ENV SSL_ENABLED="no"
+COPY --chown=rtorrent:rtorrent config.js /floodtemp
 
-# install flood webui
-RUN apk add --no-cache \
-      python \
-      nodejs \
-      nodejs-npm && \
-    apk add --no-cache --virtual=build-dependencies \
-      build-base && \
-    mkdir /usr/flood && \
+RUN mkdir /usr/flood && \
     cd /usr/flood && \
     git clone https://github.com/jesec/flood . && \
-    cp config.template.js config.js && \
+    cp /floodtemp/config.js . && \
     npm config set unsafe-perm true && \
     npm install --prefix /usr/flood && \
     npm cache clean --force && \
     npm run build && \
     npm prune --production && \
-    rm config.js && \
-    apk del --purge build-dependencies && \
-    rm -rf /root \
-           /tmp/* && \
-    ln -s /usr/local/bin/mediainfo /usr/bin/mediainfo
+    rm -rf /floodtemp && \
+    chown -R rtorrent:rtorrent /usr/flood
 
-# add local files
-COPY root/ /
-COPY VERSION /
+COPY --chown=rtorrent:rtorrent config.d/ /home/rtorrent/rtorrent/config.d/
+COPY --chown=rtorrent:rtorrent .rtorrent.rc /home/rtorrent/
 
-# ports and volumes
-EXPOSE 50000 6881 51415 3000
-VOLUME /config /downloads
+VOLUME /home/rtorrent/rtorrent/.session
+
+EXPOSE 16891 50000 6881 6881/udp 3000
+
+USER rtorrent
+
+CMD ["rtorrent", "flood"]
