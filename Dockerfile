@@ -2,6 +2,9 @@ FROM alpine
 
 ARG UGID=666
 
+COPY ./config.js /
+COPY ./entrypoint.sh /usr/local/bin/
+
 RUN addgroup -g $UGID rtorrent && \
     adduser -S -u $UGID -G rtorrent rtorrent && \
     apk add --no-cache rtorrent && \
@@ -25,11 +28,11 @@ RUN addgroup -g $UGID rtorrent && \
     npm cache clean --force && \
     npm run build && \
     npm prune --production && \
-    chown -R rtorrent:rtorrent /usr/flood
+    chown -R rtorrent:rtorrent /usr/flood && \
+    chmod +x /usr/local/bin/entrypoint.sh
 
 COPY --chown=rtorrent:rtorrent config.d/ /home/rtorrent/rtorrent/config.d/
 COPY --chown=rtorrent:rtorrent .rtorrent.rc /home/rtorrent/
-COPY entrypoint.sh /entrypoint.sh
 
 VOLUME /home/rtorrent/rtorrent/.session
 
@@ -37,4 +40,4 @@ EXPOSE 16891 50000 6881 6881/udp 3000
 
 USER rtorrent
 
-ENTRYPOINT ["entrypoint.sh"]
+CMD ["/usr/local/bin/entrypoint.sh"]
