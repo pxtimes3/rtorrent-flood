@@ -22,7 +22,8 @@ RUN set -x && addgroup -g $UGID rtorrent && \
     mkdir /watch && \
     mkdir -p /usr/flood && \
     mkdir -p /var/log/s6 && \
-    git clone https://github.com/jesec/flood /usr/flood && \
+    cd /usr/flood && \
+    git clone https://github.com/jesec/flood . && \
     mv /assets/config.js /usr/flood/config.js && \
     mv /assets/config.d/* /rtorrent/config.d && \
     mv /assets/.rtorrent.rc /rtorrent && \
