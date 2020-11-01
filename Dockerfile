@@ -17,10 +17,12 @@ RUN addgroup -g $UGID rtorrent && \
         build-base && \
     mkdir -p /rtorrent/config.d && \
     mkdir /rtorrent/.session && \
-    mkdir /download && \
-    mkdir /watch && \
+    mkdir /rtorrent/download && \
+    mkdir /rtorrent/watch && \
     mkdir -p /usr/flood && \
     mkdir -p /var/log/s6 && \
+    ln -s /rtorrent/download /download && \
+    ln -s /rtorrent/watch /watch && \
     cd /usr/flood && \
     git clone https://github.com/jesec/flood . && \
     mv /assets/config.js /usr/flood/config.js && \
