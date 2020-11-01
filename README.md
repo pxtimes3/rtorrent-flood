@@ -13,8 +13,11 @@ docker run -d \
 -p 3001:3000 \
 -v <your download directory>:/download \
 -v <watch torrent files in this directory>:/watch \
+-v <rtorrent config>:/rtorrent/.session \
+-v <flood config*>:/usr/flood \
 mamoco/rtorrent-flood
 ```
+*Not really working but whatever
 
 rTorrent is not listening to any http-requests (port 16819). Enable it if you need it or want the lizard people to mine crypto on your box.
 rpc.socket (for Flood) is located at /rtorrent/rpc.socket
