@@ -2,4 +2,4 @@
 
 cd /usr/flood 
 npm start
-rtorrent&
+rtorrent -I -n -o import=/rtorrent/.rtorrent.rc&
