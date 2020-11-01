@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Make sure the the base logging directory exists
-mkdir -p /var/log
+mkdir -p /assets/log
 cd /usr/flood 
 echo "Spawning Flood"
 
@@ -11,4 +11,4 @@ echo "Spawning Flood"
 #                      as APPEND.
 # 2>&1             ==> redirect stderr to whatever stdout
 #                      is directed to
-exec npm start >>/var/log/flood 2>&1
+exec npm start >> /var/log/s6/flood 2>&1

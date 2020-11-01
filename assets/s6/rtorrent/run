@@ -1,4 +1,3 @@
 #!/bin/sh
 echo "Spawning rTorrent"
-
-rtorrent -I -D -n -o import=/rtorrent/.rtorrent.rc > rtorrentstart 2>&1
+rtorrent -I -D -n -o import=/rtorrent/.rtorrent.rc > /var/log/s6/rtorrent 2>&1

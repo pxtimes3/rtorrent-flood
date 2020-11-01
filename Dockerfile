@@ -20,21 +20,23 @@ RUN set -x && addgroup -g $UGID rtorrent && \
     mkdir /rtorrent/.session && \
     mkdir /download && \
     mkdir /watch && \
+    mkdir -p /usr/flood && \
+    mkdir -p /var/log/s6 && \
+    git clone https://github.com/jesec/flood /usr/flood && \
+    mv /assets/config.js /usr/flood/config.js && \
     mv /assets/config.d/* /rtorrent/config.d && \
     mv /assets/.rtorrent.rc /rtorrent && \
-    chown -R rtorrent:rtorrent /rtorrent && \
-    chown -R rtorrent:rtorrent /download && \
-    chown -R rtorrent:rtorrent /watch && \
-    mkdir /usr/flood && \
-    cd /usr/flood && \
-    git clone https://github.com/jesec/flood . && \
-    cp /assets/config.js . && \
     npm config set unsafe-perm true && \
     npm install --prefix /usr/flood && \
     npm cache clean --force && \
     npm run build && \
     npm prune --production && \
-    chown -R rtorrent:rtorrent /usr/flood
+    chown -R rtorrent:rtorrent /rtorrent && \
+    chown -R rtorrent:rtorrent /download && \
+    chown -R rtorrent:rtorrent /watch && \
+    chown -R rtorrent:rtorrent /usr/flood && \
+    chown -R rtorrent:rtorrent /assets && \
+    chown -R rtorrent:rtorrent /var/log/s6
 #    mv /assets/init.sh /usr/local/bin/init.sh && \
 #    chmod +x /usr/local/bin/init.sh
 
