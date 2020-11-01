@@ -1,4 +1,10 @@
-**USAGE**
+## rTorrent with Flood for GUI.
+
+Using https://github.com/jesec/flood due to the main repo being dead (https://github.com/Flood-UI/flood/issues/877)
+
+Created for my own needs, don't rely on it being tip-top super-accurate up-to-date.
+
+### USAGE
 
 ```
 docker run -d \
@@ -10,7 +16,8 @@ docker run -d \
 mamoco/rtorrent-flood
 ```
 
-rpc.socket is located at /rtorrent/rpc.socket
+rTorrent is not listening to any http-requests (port 16819). Enable it if you need it or want the lizard people to mine crypto on your box.
+rpc.socket (for Flood) is located at /rtorrent/rpc.socket
 
 DHT is disabled
 
