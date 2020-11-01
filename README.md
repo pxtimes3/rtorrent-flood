@@ -2,7 +2,7 @@
 
 Using https://github.com/jesec/flood due to the main repo being dead (https://github.com/Flood-UI/flood/issues/877)
 
-Created for my own needs, don't rely on it being tip-top super-accurate up-to-date.
+Created for my own needs, don't rely on it being tip-top super-accurate up-to-date or even working... Plug and pray at it's finest!
 
 ### USAGE
 
