@@ -4,8 +4,8 @@ system.daemon.set = true
 
 ## control via XMLRPC sockets
 #Local UNIX socket
-network.scgi.open_local = (cat,(cfg.path),rpc.socket)
-execute.nothrow = chmod,770,(cat,(cfg.path),rpc.socket)
+network.scgi.open_local = (cat,(cfg.basedir),rpc.socket)
+execute.nothrow = chmod,770,(cat,(cfg.basedir),rpc.socket)
 
 #INET socket
 # NO! BAD! 

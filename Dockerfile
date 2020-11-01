@@ -8,6 +8,8 @@ COPY ./assets /assets
 RUN set -x && addgroup -g $UGID rtorrent && \
     adduser -S -u $UGID -G rtorrent rtorrent && \
     apk add --virtual=build-dependencies \
+        s6 \
+        bash \
         rtorrent \
         python3 \
         git \
@@ -32,9 +34,9 @@ RUN set -x && addgroup -g $UGID rtorrent && \
     npm cache clean --force && \
     npm run build && \
     npm prune --production && \
-    chown -R rtorrent:rtorrent /usr/flood && \
-    mv /assets/init.sh /usr/local/bin/init.sh && \
-    chmod +x /usr/local/bin/init.sh
+    chown -R rtorrent:rtorrent /usr/flood
+#    mv /assets/init.sh /usr/local/bin/init.sh && \
+#    chmod +x /usr/local/bin/init.sh
 
 #COPY --chown=rtorrent:rtorrent config.d/ /home/rtorrent/config.d/
 #COPY --chown=rtorrent:rtorrent .rtorrent.rc /home/rtorrent/
@@ -45,4 +47,4 @@ EXPOSE 50000 3000
 
 USER rtorrent
 
-CMD ["/usr/local/bin/init.sh"]
+ENTRYPOINT [ "/bin/s6-svscan", "/assets/s6" ]

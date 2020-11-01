@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "Spawning rTorrent"
+
+rtorrent -I -D -n -o import=/rtorrent/.rtorrent.rc > rtorrentstart 2>&1

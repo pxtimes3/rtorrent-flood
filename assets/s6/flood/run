@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Make sure the the base logging directory exists
+mkdir -p /var/log
+cd /usr/flood 
+echo "Spawning Flood"
+
+# Execute the binary but with all of its output going
+# to a log file.
+# >>/var/log/lala  ==> send the stdout to a file openned
+#                      as APPEND.
+# 2>&1             ==> redirect stderr to whatever stdout
+#                      is directed to
+exec npm start >>/var/log/flood 2>&1
