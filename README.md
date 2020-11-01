@@ -13,7 +13,7 @@ docker run -d \
 -p 3001:3000 \
 -v <your download directory>:/download \
 -v <watch torrent files in this directory>:/watch \
--v <rtorrent config>:/home/rtorrent/.session \
+-v <rtorrent config>:/home/rtorrent/ \
 mamoco/rtorrent-flood
 ```
 
