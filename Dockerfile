@@ -4,10 +4,9 @@ ARG UGID=666
 
 COPY ./assets /assets
 
-# apk add --no-cache  --virtual=build-dependencies \
-RUN set -x && addgroup -g $UGID rtorrent && \
+RUN addgroup -g $UGID rtorrent && \
     adduser -S -u $UGID -G rtorrent rtorrent && \
-    apk add --virtual=build-dependencies \
+    apk add --no-cache --virtual=build-dependencies \
         s6 \
         bash \
         rtorrent \
@@ -38,11 +37,6 @@ RUN set -x && addgroup -g $UGID rtorrent && \
     chown -R rtorrent:rtorrent /usr/flood && \
     chown -R rtorrent:rtorrent /assets && \
     chown -R rtorrent:rtorrent /var/log/s6
-#    mv /assets/init.sh /usr/local/bin/init.sh && \
-#    chmod +x /usr/local/bin/init.sh
-
-#COPY --chown=rtorrent:rtorrent config.d/ /home/rtorrent/config.d/
-#COPY --chown=rtorrent:rtorrent .rtorrent.rc /home/rtorrent/
 
 VOLUME /download /watch
 
