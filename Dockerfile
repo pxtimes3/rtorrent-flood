@@ -25,9 +25,9 @@ RUN addgroup -g $UGID rtorrent && \
     cp /config.js . && \
     npm config set unsafe-perm true && \
     npm install --prefix /usr/flood && \
-    npm cache clean --force && \
+    #npm cache clean --force && \
     npm run build && \
-    npm prune --production && \
+    #npm prune --production && \
     chown -R rtorrent:rtorrent /usr/flood && \
     chmod +x /usr/local/bin/entrypoint.sh
 
