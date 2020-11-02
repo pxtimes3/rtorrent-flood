@@ -25,9 +25,9 @@ RUN addgroup -g $UGID rtorrent && \
     # ln -s /rtorrent/watch /watch && \
     cd /usr/flood && \
     git clone https://github.com/jesec/flood . && \
-    cp /assets/config.js /usr/flood/config.js && \
-    cp /assets/config.d/ /home/rtorrent/config.d && \
-    cp /assets/.rtorrent.rc /home/rtorrent && \
+    mv /assets/config.js /usr/flood/config.js && \
+    mv /assets/config.d/ /home/rtorrent/config.d/ && \
+    mv /assets/.rtorrent.rc /home/rtorrent/.rtorrent.rc && \
     npm config set unsafe-perm true && \
     npm install --prefix /usr/flood && \
     npm cache clean --force && \
@@ -35,6 +35,7 @@ RUN addgroup -g $UGID rtorrent && \
     npm prune --production && \
     chown -R rtorrent:$UGID /home/rtorrent/ && \
     chown -R rtorrent:$UGID /home/rtorrent/.session && \
+    chown -R rtorrent:$UGID /home/rtorrent/config.d && \
     chown -R rtorrent:$UGID /download && \
     chown -R rtorrent:$UGID /watch && \
     chown -R rtorrent:rtorrent /usr/flood && \
