@@ -1,5 +1,6 @@
 .DS_store
 download/**
 run.sh
+reset.sh
 build.sh
 store/

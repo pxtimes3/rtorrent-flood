@@ -15,30 +15,34 @@ RUN addgroup -g $UGID rtorrent && \
         nodejs \
         nodejs-npm \
         build-base && \
-    mkdir -p /rtorrent/config.d && \
-    mkdir /rtorrent/.session && \
+    mkdir -p /home/rtorrent/config.d && \
+    mkdir /home/rtorrent/.session && \
     mkdir /download && \
     mkdir /watch && \
     mkdir -p /usr/flood && \
     mkdir -p /var/log/s6 && \
+    # ln -s /rtorrent/download /download && \
+    # ln -s /rtorrent/watch /watch && \
     cd /usr/flood && \
     git clone https://github.com/jesec/flood . && \
     mv /assets/config.js /usr/flood/config.js && \
-    mv /assets/config.d/* /rtorrent/config.d && \
-    mv /assets/.rtorrent.rc /rtorrent && \
+    mv /assets/config.d/ /home/rtorrent/config.d/ && \
+    mv /assets/.rtorrent.rc /home/rtorrent/.rtorrent.rc && \
     npm config set unsafe-perm true && \
     npm install --prefix /usr/flood && \
     npm cache clean --force && \
     npm run build && \
     npm prune --production && \
-    chown -R rtorrent:rtorrent /rtorrent && \
-    chown -R rtorrent:rtorrent /download && \
-    chown -R rtorrent:rtorrent /watch && \
+    chown -R rtorrent:$UGID /home/rtorrent/ && \
+    chown -R rtorrent:$UGID /home/rtorrent/.session && \
+    chown -R rtorrent:$UGID /home/rtorrent/config.d && \
+    chown -R rtorrent:$UGID /download && \
+    chown -R rtorrent:$UGID /watch && \
     chown -R rtorrent:rtorrent /usr/flood && \
     chown -R rtorrent:rtorrent /assets && \
     chown -R rtorrent:rtorrent /var/log/s6
 
-VOLUME /download /watch
+VOLUME /download /watch /home/rtorrent
 
 EXPOSE 50000 3000
 
