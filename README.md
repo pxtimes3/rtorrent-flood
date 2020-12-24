@@ -23,3 +23,5 @@ rpc.socket (for Flood) is located at /home/rtorrent/rpc.socket
 DHT is disabled
 
 Edit rtorrent to your liking by diving in to the assets/config.d && .rtorrent.rc
+
+UPDATED: 2020-12-24
