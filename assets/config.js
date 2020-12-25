@@ -1,3 +1,4 @@
+const {spawn} = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
@@ -17,7 +18,7 @@ const {argv} = require('yargs')
   })
   .option('host', {
     alias: 'h',
-    default: '0.0.0.0',
+    default: '127.0.0.1',
     describe: 'The host that Flood should listen for web connections on',
     type: 'string',
   })
@@ -29,28 +30,59 @@ const {argv} = require('yargs')
   })
   .option('secret', {
     alias: 's',
+    hidden: true,
     describe: 'A unique secret, a random one will be generated if not provided',
     type: 'string',
   })
+  .option('auth', {
+    describe: 'Access control and user management method',
+    choices: ['default', 'none'],
+  })
   .option('noauth', {
     alias: 'n',
+    hidden: true,
     default: false,
-    describe: "Disable Flood's builtin access control system, needs rthost+rtport OR rtsocket.",
+    describe: "Disable Flood's builtin access control system, deprecated, use auth=none instead",
     type: 'boolean',
   })
   .option('rthost', {
-    describe: "Depends on noauth: Host of rTorrent's SCGI interface",
+    describe: "Host of rTorrent's SCGI interface",
     type: 'string',
   })
   .option('rtport', {
-    describe: "Depends on noauth: Port of rTorrent's SCGI interface",
+    describe: "Port of rTorrent's SCGI interface",
     type: 'number',
   })
   .option('rtsocket', {
     conflicts: ['rthost', 'rtport'],
-    describe: "Depends on noauth: Path to rTorrent's SCGI unix socket",
+    describe: "Path to rTorrent's SCGI unix socket",
     type: 'string',
   })
+  .option('qburl', {
+    describe: 'URL to qBittorrent Web API',
+    type: 'string',
+  })
+  .option('qbuser', {
+    describe: 'Username of qBittorrent Web API',
+    type: 'string',
+  })
+  .option('qbpass', {
+    describe: 'Password of qBittorrent Web API',
+    type: 'string',
+  })
+  .option('trurl', {
+    describe: 'URL to Transmission RPC interface',
+    type: 'string',
+  })
+  .option('truser', {
+    describe: 'Username of Transmission RPC interface',
+    type: 'string',
+  })
+  .option('trpass', {
+    describe: 'Password of Transmission RPC interface',
+    type: 'string',
+  })
+  .group(['rthost', 'rtport', 'rtsocket', 'qburl', 'qbuser', 'qbpass', 'trurl', 'truser', 'trpass'], 'When auth=none:')
   .option('ssl', {
     default: false,
     describe: 'Enable SSL, key.pem and fullchain.pem needed in runtime directory',
@@ -72,6 +104,12 @@ const {argv} = require('yargs')
     describe: 'Allowed path for file operations, can be called multiple times',
     type: 'string',
   })
+  .option('assets', {
+    default: true,
+    describe: 'ADVANCED: Serve static assets',
+    hidden: true,
+    type: 'boolean',
+  })
   .option('dbclean', {
     default: 1000 * 60 * 60,
     describe: 'ADVANCED: Interval between database purge',
@@ -90,13 +128,43 @@ const {argv} = require('yargs')
     hidden: true,
     type: 'number',
   })
+  .option('clientpollidle', {
+    default: 1000 * 60 * 15,
+    describe: 'ADVANCED: How often (in ms) Flood will request the torrent list when no user is present',
+    hidden: true,
+    type: 'number',
+  })
+  .option('rtorrent', {
+    default: false,
+    describe: 'ADVANCED: rTorrent daemon managed by Flood',
+    hidden: true,
+    type: 'boolean',
+  })
+  .option('rtconfig', {
+    describe: 'ADVANCED: rtorrent.rc for managed rTorrent daemon',
+    implies: 'rtorrent',
+    hidden: true,
+    type: 'string',
+  })
   .option('proxy', {
     default: 'http://127.0.0.1:3000',
     describe: 'DEV ONLY: See the "Local Development" section of README.md',
     hidden: true,
     type: 'string',
   })
+  .option('test', {
+    default: false,
+    describe: 'DEV ONLY: Test setup',
+    hidden: true,
+    type: 'boolean',
+  })
+  .version(require('./package.json').version)
+  .alias('v', 'version')
   .help();
+
+process.on('SIGINT', () => {
+  process.exit();
+});
 
 try {
   fs.mkdirSync(path.join(argv.rundir, 'db'), {recursive: true});
@@ -104,6 +172,34 @@ try {
 } catch (error) {
   console.error('Failed to access runtime directory');
   process.exit(1);
+}
+
+if (argv.rtorrent) {
+  const args = [];
+  let opts = 'system.daemon.set=true';
+
+  if (typeof argv.rtconfig === 'string' && argv.rtconfig.length > 0) {
+    args.push('-n');
+    opts += `,import=${argv.rtconfig}`;
+  }
+
+  const rTorrentProcess = spawn('rtorrent', args.concat(['-o', opts]), {stdio: 'inherit'});
+
+  fs.writeFileSync(path.join(argv.rundir, 'rtorrent.pid'), `${rTorrentProcess.pid}`);
+
+  if (!argv.test) {
+    rTorrentProcess.on('close', () => {
+      process.exit(1);
+    });
+    rTorrentProcess.on('error', () => {
+      process.exit(1);
+    });
+  }
+
+  process.on('exit', () => {
+    console.log('Killing rTorrent daemon...');
+    rTorrentProcess.kill('SIGTERM');
+  });
 }
 
 const DEFAULT_SECRET_PATH = path.join(argv.rundir, 'flood.secret');
@@ -127,28 +223,75 @@ if (!argv.secret) {
   ({secret} = argv);
 }
 
+let connectionSettings;
+if (argv.rtsocket != null || argv.rthost != null) {
+  if (argv.rtsocket != null) {
+    connectionSettings = {
+      client: 'rTorrent',
+      type: 'socket',
+      version: 1,
+      socket: argv.rtsocket,
+    };
+  } else {
+    connectionSettings = {
+      client: 'rTorrent',
+      type: 'tcp',
+      version: 1,
+      host: argv.rthost,
+      port: argv.rtport,
+    };
+  }
+} else if (argv.qburl != null) {
+  connectionSettings = {
+    client: 'qBittorrent',
+    type: 'web',
+    version: 1,
+    url: argv.qburl,
+    username: argv.qbuser,
+    password: argv.qbpass,
+  };
+} else if (argv.trurl != null) {
+  connectionSettings = {
+    client: 'Transmission',
+    type: 'rpc',
+    version: 1,
+    url: argv.trurl,
+    username: argv.truser,
+    password: argv.trpass,
+  };
+}
+
+let authMethod = 'default';
+if (argv.noauth || argv.auth === 'none') {
+  authMethod = 'none';
+}
+
+let allowedPaths = [];
+if (typeof argv.allowedpath === 'string') {
+  allowedPaths = allowedPaths.concat(argv.allowedpath.split(','));
+} else if (Array.isArray(argv.allowedpath)) {
+  allowedPaths = allowedPaths.concat(argv.allowedpath);
+}
+
 const CONFIG = {
   baseURI: argv.baseuri,
   dbCleanInterval: argv.dbclean,
   dbPath: path.resolve(path.join(argv.rundir, 'db')),
   tempPath: path.resolve(path.join(argv.rundir, 'temp')),
-  disableUsersAndAuth: argv.noauth,
-  configUser: {
-    host: argv.rthost || 'localhost',
-    port: argv.rtport || 5000,
-    socket: argv.rtsocket != null,
-    socketPath: argv.rtsocket || '/data/rtorrent.sock',
-  },
+  authMethod,
+  configUser: connectionSettings,
   floodServerHost: argv.host,
   floodServerPort: argv.port,
   floodServerProxy: argv.proxy,
   maxHistoryStates: argv.maxhistorystates,
   torrentClientPollInterval: argv.clientpoll,
+  torrentClientPollIntervalIdle: argv.clientpollidle,
   secret,
   ssl: argv.ssl,
   sslKey: argv.sslkey || path.resolve(path.join(argv.rundir, 'key.pem')),
   sslCert: argv.sslcert || path.resolve(path.join(argv.rundir, 'fullchain.pem')),
-  allowedPaths: argv.allowedpath ? [].concat(argv.allowedpath) : null,
+  allowedPaths: allowedPaths.length > 0 ? allowedPaths : undefined,
+  serveAssets: argv.assets,
 };
 
 module.exports = CONFIG;
