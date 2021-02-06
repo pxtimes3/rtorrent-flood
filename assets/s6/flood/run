@@ -11,4 +11,5 @@ echo "Spawning Flood"
 #                      as APPEND.
 # 2>&1             ==> redirect stderr to whatever stdout
 #                      is directed to
-exec npm start >> /var/log/s6/flood 2>&1
+exec /usr/flood --host=0.0.0.0 >> /var/log/s6/flood 2>&1
+#exec npm start >> /var/log/s6/flood 2>&1

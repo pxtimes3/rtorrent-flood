@@ -1,11 +1,9 @@
 #!/bin/bash
 
-docker run -d --name=mamoco-rtorrent-flood \
+docker run -d --name=rtfdev \
 --network host \
--v <yourwatch>:/watch \
--v <yourdownload>:/download \
--v <yourconfig>:/home/rtorrent \
+-v /home/px/watch:/watch \
+-v /4tb1/tSeed:/download \
+-v /home/px/.config/rtf/rtorrent:/home/rtorrent \
 -e PGID=0 -e PUID=0 -e TZ=Europe/Stockholm \
-#-p 3000:3000 \ # network host makes these superfluous
-#-p 50000:50000 \
-mamoco/rtorrent-flood:latest
+rtfdev:latest
